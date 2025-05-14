@@ -3,6 +3,7 @@ mod stats;
 mod chain;
 mod formats {
     pub mod csv;
+    pub mod parquet;
 }
 
 use clap::Parser;
@@ -47,11 +48,14 @@ struct Args {
 
 fn main() -> Result<()> {
     let args = Args::parse();
-    // TODO: поддержка других форматов
-    if args.format == "csv" {
-        formats::csv::process_csv_batch(&args)?;
-    } else {
-        eprintln!("Only CSV format supported in MVP");
+    // Поддержка разных форматов
+    match args.format.as_str() {
+        "csv" => formats::csv::process_csv_batch(&args)?,
+        "parquet" => formats::parquet::process_parquet_batch(&args)?,
+        _ => {
+            eprintln!("Only CSV and Parquet formats supported in MVP");
+            std::process::exit(1);
+        }
     }
     Ok(())
 }
