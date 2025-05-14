@@ -16,7 +16,7 @@
 - [x] Пример использования QuestDB (examples/questdb_batch.rs): читает URL из questdb_url.txt, получает трейды через HTTP, batch-агрегация, вывод результата
 - [x] ClickHouse: чтение трейдов через HTTP API, запись свечей, интеграция в main.rs
 - [x] Пример использования ClickHouse (examples/clickhouse_batch.rs): читает URL из clickhouse_url.txt, получает трейды через HTTP, batch-агрегация, вывод результата
-- [ ] Покрыть happy-path тестами и примерами
+- [x] Покрыть happy-path тестами и примерами
 
 ---
 
