@@ -4,6 +4,7 @@ mod chain;
 mod formats {
     pub mod csv;
     pub mod parquet;
+    pub mod duckdb;
 }
 
 use clap::Parser;
@@ -52,8 +53,9 @@ fn main() -> Result<()> {
     match args.format.as_str() {
         "csv" => formats::csv::process_csv_batch(&args)?,
         "parquet" => formats::parquet::process_parquet_batch(&args)?,
+        "duckdb" => formats::duckdb::process_duckdb_batch(&args)?,
         _ => {
-            eprintln!("Only CSV and Parquet formats supported in MVP");
+            eprintln!("Only CSV, Parquet and DuckDB formats supported in MVP");
             std::process::exit(1);
         }
     }
