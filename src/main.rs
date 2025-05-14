@@ -5,6 +5,7 @@ mod formats {
     pub mod csv;
     pub mod parquet;
     pub mod duckdb;
+    pub mod questdb;
 }
 
 use clap::Parser;
@@ -54,8 +55,9 @@ fn main() -> Result<()> {
         "csv" => formats::csv::process_csv_batch(&args)?,
         "parquet" => formats::parquet::process_parquet_batch(&args)?,
         "duckdb" => formats::duckdb::process_duckdb_batch(&args)?,
+        "questdb" => formats::questdb::process_questdb_batch(&args)?,
         _ => {
-            eprintln!("Only CSV, Parquet and DuckDB formats supported in MVP");
+            eprintln!("Only CSV, Parquet, DuckDB and QuestDB formats supported in MVP");
             std::process::exit(1);
         }
     }
