@@ -6,6 +6,7 @@ mod formats {
     pub mod parquet;
     pub mod duckdb;
     pub mod questdb;
+    pub mod clickhouse;
 }
 
 use clap::Parser;
@@ -56,8 +57,9 @@ fn main() -> Result<()> {
         "parquet" => formats::parquet::process_parquet_batch(&args)?,
         "duckdb" => formats::duckdb::process_duckdb_batch(&args)?,
         "questdb" => formats::questdb::process_questdb_batch(&args)?,
+        "clickhouse" => formats::clickhouse::process_clickhouse_batch(&args)?,
         _ => {
-            eprintln!("Only CSV, Parquet, DuckDB and QuestDB formats supported in MVP");
+            eprintln!("Only CSV, Parquet, DuckDB, QuestDB and ClickHouse formats supported in MVP");
             std::process::exit(1);
         }
     }
