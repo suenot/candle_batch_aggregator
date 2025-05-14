@@ -6,7 +6,7 @@
 
 ## Возможности
 - Пакетная обработка исторических данных по файлам/папкам
-- Поддержка CSV (MVP), Parquet, DuckDB, QuestDB, ClickHouse (адаптеры)
+- Поддержка CSV и Parquet (MVP), далее DuckDB, QuestDB, ClickHouse (адаптеры)
 - Гибкая система флагов (input/output, symbol, interval, format, benchmark, progress и др.)
 - Агрегация цепочкой: младшие таймфреймы из трейдов, старшие — из младших свечей
 - Прогресс, бенчмаркинг, автоматизация, расширяемость
@@ -17,7 +17,11 @@
 ## Пример запуска
 
 ```bash
-cargo run -p candle_batch_aggregator -- -i ./data -s BTCUSDT,ETHUSDT -t 1,5,15,60 -f csv -b -p
+# Обработка всех пар и всех таймфреймов из CSV
+cargo run -p candle_batch_aggregator -- -i ./data -s ALL -t ALL -f csv -b -p
+
+# Обработка одной пары и нескольких таймфреймов из Parquet
+cargo run -p candle_batch_aggregator -- -i ./data -s BTCUSDT -t 1,5,15,60 -f parquet
 ```
 
 ---
@@ -49,9 +53,9 @@ cargo run -p candle_batch_aggregator -- -i ./data -s BTCUSDT,ETHUSDT -t 1,5,15,6
 
 ---
 
-## MVP: поддержка CSV
-- На первом этапе реализована поддержка CSV (как в примере bybit-generate-candles)
-- После этого — добавление Parquet, DuckDB, QuestDB, ClickHouse
+## MVP: поддержка CSV и Parquet
+- На первом этапе реализована поддержка CSV и Parquet (чтение трейдов, агрегация, экспорт свечей)
+- После этого — добавление DuckDB, QuestDB, ClickHouse
 
 ---
 
@@ -61,13 +65,27 @@ cargo run -p candle_batch_aggregator -- -i ./data -s BTCUSDT,ETHUSDT -t 1,5,15,6
 # Обработка всех пар и всех таймфреймов из CSV
 candle-batch-aggregator -i ./data -s ALL -t ALL -f csv -b -p
 
-# Обработка одной пары и нескольких таймфреймов
-candle-batch-aggregator -i ./data -s BTCUSDT -t 1,5,15,60 -f csv
+# Обработка одной пары и нескольких таймфреймов из Parquet
+candle-batch-aggregator -i ./data -s BTCUSDT -t 1,5,15,60 -f parquet
 ```
 
 ---
 
+## Требования к структуре Parquet
+- Входные файлы Parquet должны содержать следующие поля (см. пример from_parquet.rs):
+  - timestamp (i64, миллисекунды)
+  - exchange (string)
+  - base_id (string)
+  - quote_id (string)
+  - market_type (string: Spot/Futures/Margin)
+  - id (string)
+  - price (f64)
+  - amount (f64)
+  - side (string: Buy/Sell)
+
+---
+
 ## TODO
-- [ ] Поддержка Parquet, DuckDB, QuestDB, ClickHouse
+- [ ] Поддержка DuckDB, QuestDB, ClickHouse
 - [ ] Расширяемые метрики через CandleMetric
 - [ ] Интеграция с CI и автоматизация тестов 
