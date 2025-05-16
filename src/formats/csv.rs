@@ -8,6 +8,7 @@ use candle_generator::{Trade, Instrument, Pair, MarketType, Side};
 use std::time::Instant;
 use crate::aggregation;
 use crate::stats::{ProcessingStats, print_summary};
+use chrono::TimeZone;
 
 #[derive(Debug, Deserialize)]
 struct CsvTrade {
@@ -122,4 +123,28 @@ pub fn process_csv_batch(args: &Args) -> Result<()> {
     stats.stop();
     print_summary(&stats);
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_csv_trade_parsing() {
+        let data = "timestamp,price,amount,side,base,quote,exchange\n\
+                    1714000000000,50000.0,0.1,buy,BTC,USDT,binance\n";
+        let mut rdr = csv::ReaderBuilder::new().has_headers(true).from_reader(Cursor::new(data));
+        let mut trades = Vec::new();
+        for result in rdr.deserialize() {
+            let csv_trade: CsvTrade = result.unwrap();
+            let trade = csv_trade.to_trade();
+            trades.push(trade);
+        }
+        assert_eq!(trades.len(), 1);
+        assert_eq!(trades[0].price, 50000.0);
+        assert_eq!(trades[0].amount, 0.1);
+        assert_eq!(trades[0].instrument.pair.base_id, "BTC");
+        assert_eq!(trades[0].side, candle_generator::Side::Buy);
+    }
 } 
