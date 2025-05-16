@@ -147,4 +147,52 @@ mod tests {
         assert_eq!(trades[0].instrument.pair.base_id, "BTC");
         assert_eq!(trades[0].side, candle_generator::Side::Buy);
     }
+
+    #[test]
+    fn test_csv_empty() {
+        let data = "timestamp,price,amount,side,base,quote,exchange\n";
+        let mut rdr = csv::ReaderBuilder::new().has_headers(true).from_reader(Cursor::new(data));
+        let mut trades = Vec::new();
+        for result in rdr.deserialize() {
+            let csv_trade: Result<CsvTrade, _> = result;
+            assert!(csv_trade.is_ok());
+        }
+        assert_eq!(trades.len(), 0);
+    }
+
+    #[test]
+    fn test_csv_incorrect_data() {
+        let data = "timestamp,price,amount,side,base,quote,exchange\n\
+                    not_a_timestamp,not_a_price,not_an_amount,side,BTC,USDT,binance\n";
+        let mut rdr = csv::ReaderBuilder::new().has_headers(true).from_reader(Cursor::new(data));
+        let mut errors = 0;
+        for result in rdr.deserialize() {
+            if result.is_err() { errors += 1; }
+        }
+        assert_eq!(errors, 1);
+    }
+
+    #[test]
+    fn test_csv_multiple_symbols() {
+        let data = "timestamp,price,amount,side,base,quote,exchange\n\
+                    1714000000000,50000.0,0.1,buy,BTC,USDT,binance\n\
+                    1714000001000,3000.0,0.5,sell,ETH,USDT,binance\n";
+        let mut rdr = csv::ReaderBuilder::new().has_headers(true).from_reader(Cursor::new(data));
+        let mut trades = Vec::new();
+        for result in rdr.deserialize() {
+            let csv_trade: CsvTrade = result.unwrap();
+            trades.push(csv_trade.to_trade());
+        }
+        assert_eq!(trades.len(), 2);
+        assert_eq!(trades[0].instrument.pair.base_id, "BTC");
+        assert_eq!(trades[1].instrument.pair.base_id, "ETH");
+    }
+
+    #[test]
+    fn test_parse_intervals() {
+        let tfs = parse_intervals("1,5,15");
+        assert_eq!(tfs.len(), 3);
+        let tfs_all = parse_intervals("ALL");
+        assert!(tfs_all.len() > 3);
+    }
 } 
