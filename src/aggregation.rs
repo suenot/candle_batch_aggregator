@@ -95,4 +95,69 @@ pub fn write_candles_csv<P: AsRef<Path>>(candles: &[Candle], out_path: P) -> Res
     }
     wtr.flush()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use candle_generator::{Trade, Instrument, Pair, MarketType, Side};
+    use chrono::{Utc};
+
+    fn sample_trade(ts: i64, price: f64, amount: f64) -> Trade {
+        Trade {
+            instrument: Instrument {
+                pair: Pair { base_id: "BTC".to_string(), quote_id: "USDT".to_string() },
+                exchange: "binance".to_string(),
+                market_type: MarketType::Spot,
+            },
+            id: format!("{}", ts),
+            price,
+            amount,
+            side: Side::Buy,
+            timestamp: Utc.timestamp_millis_opt(ts).unwrap(),
+        }
+    }
+
+    #[test]
+    fn test_aggregate_trades_chain_empty() {
+        let trades: Vec<Trade> = vec![];
+        let tfs = vec![candle_generator::Timeframe::m1];
+        let result = aggregate_trades_chain(trades.iter(), &tfs);
+        assert!(result[&candle_generator::Timeframe::m1].is_empty());
+    }
+
+    #[test]
+    fn test_aggregate_trades_chain_one_trade() {
+        let trades = vec![sample_trade(1714000000000, 50000.0, 0.1)];
+        let tfs = vec![candle_generator::Timeframe::m1];
+        let result = aggregate_trades_chain(trades.iter(), &tfs);
+        assert_eq!(result[&candle_generator::Timeframe::m1].len(), 1);
+    }
+
+    #[test]
+    fn test_aggregate_trades_chain_multiple_trades() {
+        let trades = vec![
+            sample_trade(1714000000000, 50000.0, 0.1),
+            sample_trade(1714000005000, 50100.0, 0.2),
+            sample_trade(1714000010000, 50200.0, 0.3),
+        ];
+        let tfs = vec![candle_generator::Timeframe::m1];
+        let result = aggregate_trades_chain(trades.iter(), &tfs);
+        assert_eq!(result[&candle_generator::Timeframe::m1].len(), 1);
+    }
+
+    #[test]
+    fn test_aggregate_trades_chain_multiple_timeframes() {
+        let trades = vec![
+            sample_trade(1714000000000, 50000.0, 0.1),
+            sample_trade(1714000060000, 50100.0, 0.2),
+            sample_trade(1714000120000, 50200.0, 0.3),
+            sample_trade(1714000180000, 50300.0, 0.4),
+            sample_trade(1714000240000, 50400.0, 0.5),
+        ];
+        let tfs = vec![candle_generator::Timeframe::m1, candle_generator::Timeframe::m5];
+        let result = aggregate_trades_chain(trades.iter(), &tfs);
+        assert!(result[&candle_generator::Timeframe::m1].len() > 0);
+        assert!(result[&candle_generator::Timeframe::m5].len() > 0);
+    }
 } 
